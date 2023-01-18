@@ -18,3 +18,8 @@ https://stackoverflow.com/questions/56522110/how-to-fix-rundll32-exe-user32-dll-
 2. 运行VB_compiles_changewallpaper_vb_exe.bat，把vb编译成exe
 3. **管理员**运行 ChangeWallpaper.exe 文件
 4. 就会把当前目录下的 桌面.jpg 复制到 c:\windows 目录中，然后修改桌面图片
+
+### python打包到exe
+`pyinstaller -F -w -i x.ico xxx.py`
+生成spec后
+`pyinstaller xxx.spec`

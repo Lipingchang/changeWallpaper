@@ -1,8 +1,10 @@
 from tkinter import *
 from random import randint
 import os
+import sys
 from typing import List
 from PIL import ImageTk, Image
+
 
 class Screen:
     def __init__(self):
@@ -12,7 +14,8 @@ class Screen:
         self.root.bind('<Button-1>', self.myquit)
         # self.root.bind('<Motion>', self.myquit)
 
-        self.canvas = Canvas(self.root)
+        # print(self.canvas.config())  canvas的borderwidth本来就是0 highlightthickness初始是2
+        self.canvas = Canvas(self.root, bg="black", highlightthickness=0)
         self.canvas.pack(expand=YES, fill=BOTH)
 
         # self.ball = Balls(self.canvas)
@@ -34,34 +37,55 @@ class Screen:
     def myquit(self, event):
         self.root.destroy()
 
+
 class ScreenImages:
     def __init__(self, canvas: Canvas):
         self.canvas = canvas
         self.currentImage = 0  # 当前显示的图片index
-        self.images: List[PhotoImage] = []       # 所有图片
-        self.canvasImageWig = 0                     # image控件的编号
+        self.images: List[PhotoImage] = []  # 所有图片
+        self.canvasImageWig = 0  # image控件的编号
+        self.errorTextId = 0  # 如果没有找到图片, 会显示报错的text控件的id
         max_w = canvas.winfo_screenwidth()
         max_h = canvas.winfo_screenheight()
-        for f in os.listdir(os.path.curdir):
-            isjpeg = f.lower().endswith("jpeg") or f.lower().endswith("jpg")
-            if f.startswith("screensaver") and isjpeg:
+
+        # 打包后文件 运行时 会把文件解压到 _MEIPASS 路径中
+        imageFileFolderPath = 'screensaverJpegFiles'
+        if getattr(sys, 'frozen', False):
+            # 打包后
+            imageFileFolderPath = os.path.join(sys._MEIPASS, imageFileFolderPath)
+        else:
+            # 源文件运行
+            imageFileFolderPath = os.path.join(os.path.curdir, imageFileFolderPath)
+
+        for f in os.listdir(imageFileFolderPath):
+            if f.lower().endswith("jpeg") or f.lower().endswith("jpg"):
                 # 缩放图片适合屏幕
-                originImg = Image.open(f)
+                originImg = Image.open(os.path.join(imageFileFolderPath,f))
                 x_scale = max_w / originImg.size[0]
                 y_scale = max_h / originImg.size[1]
                 scale = x_scale if x_scale < y_scale else y_scale
-                img = originImg.resize((int(scale*originImg.size[0]), int(scale*originImg.size[1])),Image.ANTIALIAS)
+                img = originImg.resize((int(scale * originImg.size[0]), int(scale * originImg.size[1])),
+                                       Image.ANTIALIAS)
                 self.images.append(
                     ImageTk.PhotoImage(img)
                 )
         # 放入第一张图片
         if len(self.images):
-            self.canvasImageWig = self.canvas.create_image(int(max_w/2), int(max_h/2), image=self.images[self.currentImage], anchor=CENTER)
+            self.canvasImageWig = self.canvas.create_image(int(max_w / 2), int(max_h / 2),
+                                                           image=self.images[self.currentImage], anchor=CENTER)
 
     def nextImage(self):
-        self.currentImage += 1
-        self.currentImage = self.currentImage % len(self.images)    # TODO 除0?
-        self.canvas.itemconfig(self.canvasImageWig, image=self.images[self.currentImage])
+        if len(self.images):
+            self.currentImage += 1
+            self.currentImage = self.currentImage % len(self.images)  # TODO 除0?
+            self.canvas.itemconfig(self.canvasImageWig, image=self.images[self.currentImage])
+        elif self.errorTextId == 0:  # 找不到图片:
+            self.errorTextId = self.canvas.create_text(
+                100, 100,
+                text="screen saver images not found.. click to back..",
+                anchor=NW
+            )
+
 
 class Balls:
     def __init__(self, canvas: Canvas):
