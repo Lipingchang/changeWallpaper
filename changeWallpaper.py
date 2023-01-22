@@ -33,9 +33,9 @@ def set_wallpaper_color(r, g, b):
     # R G B, 可能是小端系统, 所以G和B 要位移到左边
     cc = r | (g << 8) | (b << 16)
     return ctypes.windll.user32.SetSysColors(
-        win32con.COLOR_BACKGROUND,
-        byref(c_int(1)),
-        byref(c_int(cc))
+        1,                                          # 颜色列表的长度
+        byref(c_int(win32con.COLOR_BACKGROUND)),    # 被改变颜色的控件列表
+        byref(c_int(cc))                            # 颜色列表
     )
 
 
