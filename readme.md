@@ -23,3 +23,9 @@ https://stackoverflow.com/questions/56522110/how-to-fix-rundll32-exe-user32-dll-
 `pyinstaller -F -w -i x.ico xxx.py`
 生成spec后
 `pyinstaller xxx.spec`
+
+用nuitka打包出来的文件和pyinstaller一样？ `nuitka  --standalone --mingw64 --plugin-enable=tk-inter --output-dir=nuitkaout screenSaverTest.py`
+
+加上 --onefile 后 启动速度也没变快。
+
+onefile 和 -F 都会输出一个exe，但启动速度都不快

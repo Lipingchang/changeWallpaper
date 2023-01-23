@@ -2,9 +2,11 @@ from tkinter import *
 from random import randint
 import os
 import sys
-from typing import List
+from typing import List, Dict
 from PIL import ImageTk, Image
-
+import ctypes
+import win32con
+import configparser
 
 class Screen:
     def __init__(self):
@@ -28,7 +30,7 @@ class Screen:
 
     def nextImages(self):
         self.images.nextImage()
-        self.root.after(10 * 1000, self.nextImages)
+        self.root.after(1 * 1000, self.nextImages)
 
     def moveBalls(self):
         self.ball.moveBall()
@@ -41,49 +43,75 @@ class Screen:
 class ScreenImages:
     def __init__(self, canvas: Canvas):
         self.canvas = canvas
-        self.currentImage = 0  # 当前显示的图片index
-        self.images: List[PhotoImage] = []  # 所有图片
-        self.canvasImageWig = 0  # image控件的编号
-        self.errorTextId = 0  # 如果没有找到图片, 会显示报错的text控件的id
-        max_w = canvas.winfo_screenwidth()
-        max_h = canvas.winfo_screenheight()
+        self.currentImage = -1  # 当前显示的图片index  orderConfig的下标
+        self.images: Dict[str, PhotoImage] = {}  # 所有图片
+        self.canvasImageWig = -1  # image控件的编号
+        self.errorTextId = -1  # 如果没有找到图片, 会显示报错的text控件的id
+        self.max_w = canvas.winfo_screenwidth()
+        self.max_h = canvas.winfo_screenheight()
 
         # 打包后文件 运行时 会把文件解压到 _MEIPASS 路径中
-        imageFileFolderPath = 'screensaverJpegFiles'
+        self.imageFileFolderPath = 'screensaverJpegFiles'
         if getattr(sys, 'frozen', False):
             # 打包后
-            imageFileFolderPath = os.path.join(sys._MEIPASS, imageFileFolderPath)
+            self.imageFileFolderPath = os.path.join(sys._MEIPASS, self.imageFileFolderPath)
         else:
             # 源文件运行
-            imageFileFolderPath = os.path.join(os.path.curdir, imageFileFolderPath)
+            self.imageFileFolderPath = os.path.join(os.path.curdir, self.imageFileFolderPath)
 
-        for f in os.listdir(imageFileFolderPath):
+        # 读取图片展示先后顺序 配置
+        orderConfig = configparser.ConfigParser()
+        orderConfig.read(os.path.join(self.imageFileFolderPath, "order.ini"), encoding="utf-8")
+        orderConfig = orderConfig['image_order']['order']
+
+        self.readAllImageFiles()
+
+        if orderConfig == "all":
+            orderConfig = list(self.images.keys())
+        else:
+            orderConfig = eval(orderConfig)
+            orderConfig = list(filter(lambda f: f in list(self.images.keys()), orderConfig))
+        print(orderConfig)
+        self.orderConfig = orderConfig
+
+
+    def readAllImageFiles(self):
+        # 读取图片到内存
+        for f in os.listdir(self.imageFileFolderPath):
             if f.lower().endswith("jpeg") or f.lower().endswith("jpg"):
                 # 缩放图片适合屏幕
-                originImg = Image.open(os.path.join(imageFileFolderPath,f))
-                x_scale = max_w / originImg.size[0]
-                y_scale = max_h / originImg.size[1]
+                originImg = Image.open(os.path.join(self.imageFileFolderPath, f))
+                x_scale = self.max_w / originImg.size[0]
+                y_scale = self.max_h / originImg.size[1]
                 scale = x_scale if x_scale < y_scale else y_scale
                 img = originImg.resize((int(scale * originImg.size[0]), int(scale * originImg.size[1])),
                                        Image.ANTIALIAS)
-                self.images.append(
-                    ImageTk.PhotoImage(img)
-                )
-        # 放入第一张图片
-        if len(self.images):
-            self.canvasImageWig = self.canvas.create_image(int(max_w / 2), int(max_h / 2),
-                                                           image=self.images[self.currentImage], anchor=CENTER)
+                self.images[f] = ImageTk.PhotoImage(img)
+
 
     def nextImage(self):
-        if len(self.images):
+        if len(self.orderConfig):
             self.currentImage += 1
-            self.currentImage = self.currentImage % len(self.images)  # TODO 除0?
-            self.canvas.itemconfig(self.canvasImageWig, image=self.images[self.currentImage])
+            self.currentImage = self.currentImage % len(self.orderConfig)
+            if self.canvasImageWig == -1:
+                # 放入第一张图片
+                if len(self.orderConfig):
+                    self.canvasImageWig = \
+                        self.canvas.create_image(int(self.max_w / 2), int(self.max_h / 2),
+                                                 image=self.images[self.orderConfig[self.currentImage]],
+                                                 anchor=CENTER
+                                                 )
+            else:
+                self.canvas.itemconfig(
+                    self.canvasImageWig,
+                    image=self.images[self.orderConfig[self.currentImage]]
+                )
         elif self.errorTextId == 0:  # 找不到图片:
             self.errorTextId = self.canvas.create_text(
                 100, 100,
                 text="screen saver images not found.. click to back..",
-                anchor=NW
+                anchor=NW,
+
             )
 
 
@@ -132,4 +160,9 @@ class Balls:
             self.y_speed = - self.y_speed
 
 
-Screen()
+if '/s' in sys.argv:
+    Screen()
+else:
+    ctypes.windll.user32.MessageBoxW(0, 'other param not impl:' + " ".join(sys.argv[1:]), 'screensaver', win32con.MB_OK)
+
+
