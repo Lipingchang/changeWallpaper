@@ -65,11 +65,39 @@ def set_wallpaper_mode(mode_str):
     )
 
 
-get_wallpaper()
-absP = os.path.abspath('桌面-py.jpg')
-set_wallpaper(absP)
-set_wallpaper_mode('fit')
-get_wallpaper()
-set_wallpaper_color(r=255, g=0, b=0)
+def main_wallpaper():
+    get_wallpaper()
+    absP = os.path.abspath('桌面-py.jpg')
+    set_wallpaper(absP)
+    set_wallpaper_mode('fit')
+    get_wallpaper()
+    set_wallpaper_color(r=255, g=0, b=0)
 
 # TODO 收集执行信息 发到服务器
+
+
+def get_screensaver():
+    reg_key = win32api.RegOpenKeyEx(
+        win32con.HKEY_CURRENT_USER,
+        "Control Panel\\Desktop",
+        0,
+        win32con.KEY_READ | win32con.KEY_WOW64_64KEY
+    )
+    value, key_type = win32api.RegQueryValueEx(reg_key, "SCRNSAVE.EXE")
+    win32api.RegCloseKey(reg_key)
+    print(value,key_type)
+
+
+def set_screensaver(path):
+    # 这个path可以带空格 不需要双引号 可能是向系统调用 传递参数的时候 是一个字符串?
+    r = os.system("rundll32.exe desk.cpl,InstallScreenSaver " + path)
+    # TODO 异步? 然后杀死弹出窗口?
+
+
+def main_screensaver():
+    # get_screensaver()
+    set_screensaver(os.path.abspath("./dist/screenSaverTest/screenSaverTest.scr"))
+    # TODO 复制scr文件到windows目录或者其他目录中
+
+
+main_screensaver()
