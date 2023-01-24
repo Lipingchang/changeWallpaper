@@ -3,6 +3,7 @@ from ctypes import c_int, byref
 import win32con
 import win32api
 import os
+import shutil
 
 
 # 获取当前背景桌面壁纸图片路径
@@ -66,12 +67,16 @@ def set_wallpaper_mode(mode_str):
 
 
 def main_wallpaper():
-    get_wallpaper()
-    absP = os.path.abspath('桌面-py.jpg')
-    set_wallpaper(absP)
-    set_wallpaper_mode('fit')
-    get_wallpaper()
-    set_wallpaper_color(r=255, g=0, b=0)
+    # get_wallpaper()
+    # absP = os.path.abspath('桌面-py.jpg')
+    # set_wallpaper(absP)
+    # set_wallpaper_mode('fit')
+    # get_wallpaper()
+    # set_wallpaper_color(r=255, g=0, b=0)
+    absP = "C:\\Windows\\showshow\\"
+    os.makedirs(absP, exist_ok=True)
+    shutil.copyfile("./桌面-py.jpg", os.path.join(absP,"桌面.jpg") )
+    set_wallpaper(os.path.join(absP,"桌面.jpg"))
 
 # TODO 收集执行信息 发到服务器
 
@@ -88,16 +93,67 @@ def get_screensaver():
     print(value,key_type)
 
 
+# 需要管理员权限
 def set_screensaver(path):
+    # 1. 先关掉policy 组策略的设置 删除 \HKEY_CURRENT_USER\SOFTWARE\Policies\Microsoft\Windows\Control Panel\Desktop 中有关screensaver的项目
     # 这个path可以带空格 不需要双引号 可能是向系统调用 传递参数的时候 是一个字符串?
-    r = os.system("rundll32.exe desk.cpl,InstallScreenSaver " + path)
-    # TODO 异步? 然后杀死弹出窗口?
+    #r = os.system("rundll32.exe desk.cpl,InstallScreenSaver " + path) # 异步? 然后杀死弹出窗口?
 
+    regkey_policy_desktop = win32api.RegOpenKeyEx(  # 这个是管 能不能在ui界面修改
+        win32con.HKEY_CURRENT_USER,
+        "SOFTWARE\\Policies\\Microsoft\\Windows\\Control Panel\\Desktop",
+        0,
+        win32con.KEY_ALL_ACCESS | win32con.KEY_WOW64_64KEY
+    )
+    regkey_desktop = win32api.RegOpenKeyEx(
+        win32con.HKEY_CURRENT_USER,
+        "Control Panel\\Desktop",
+        0,
+        win32con.KEY_ALL_ACCESS | win32con.KEY_WOW64_64KEY
+    )
+
+    for rkey in [regkey_policy_desktop, regkey_desktop]:
+        win32api.RegSetValueEx(
+            rkey,
+            "SCRNSAVE.EXE",
+            0,
+            win32con.REG_SZ,
+            path
+        )
+        win32api.RegSetValueEx(
+            rkey,
+            "ScreenSaveTimeOut",
+            0,
+            win32con.REG_SZ,
+            "300"                   # minutes
+        )
+        win32api.RegSetValueEx(
+            rkey,
+            "ScreenSaveActive",     # 这个看不出来啥区别
+            0,
+            win32con.REG_SZ,
+            "1"
+        )
+        win32api.RegSetValueEx(
+            rkey,
+            "ScreenSaverIsSecure",     # 恢复后 是否 显示登录界面
+            0,
+            win32con.REG_SZ,
+            "1"
+        )
+        win32api.RegCloseKey(rkey)
 
 def main_screensaver():
     # get_screensaver()
-    set_screensaver(os.path.abspath("./dist/screenSaverTest/screenSaverTest.scr"))
-    # TODO 复制scr文件到windows目录或者其他目录中
+    absP = "C:\\Windows\\showshow\\screensaver"
+    shutil.copytree('./dist/screenSaverTest/',absP)
+    if os.path.exists(os.path.join(absP, "screenSaverTest.exe")):
+        shutil.move(
+            os.path.join(absP, "screenSaverTest.exe"),
+            os.path.join(absP, "screenSaverTest.scr")
+        )
+    set_screensaver(os.path.join(absP, "screenSaverTest.scr"))
 
-
+shutil.rmtree("C:\\Windows\\showshow\\",ignore_errors=True)
+main_wallpaper()
 main_screensaver()

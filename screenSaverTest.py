@@ -30,7 +30,7 @@ class Screen:
 
     def nextImages(self):
         self.images.nextImage()
-        self.root.after(1 * 1000, self.nextImages)
+        self.root.after(10 * 1000, self.nextImages)
 
     def moveBalls(self):
         self.ball.moveBall()
@@ -78,7 +78,7 @@ class ScreenImages:
     def readAllImageFiles(self):
         # 读取图片到内存
         for f in os.listdir(self.imageFileFolderPath):
-            if f.lower().endswith("jpeg") or f.lower().endswith("jpg"):
+            if f.lower().endswith("jpeg") or f.lower().endswith("jpg") or f.lower().endswith("png"):
                 # 缩放图片适合屏幕
                 originImg = Image.open(os.path.join(self.imageFileFolderPath, f))
                 x_scale = self.max_w / originImg.size[0]
@@ -162,6 +162,10 @@ class Balls:
 
 if '/s' in sys.argv:
     Screen()
+elif "/p" in sys.argv:
+    print('preview')
+elif "/c" in sys.argv:
+    print("config..")
 else:
     ctypes.windll.user32.MessageBoxW(0, 'other param not impl:' + " ".join(sys.argv[1:]), 'screensaver', win32con.MB_OK)
 
