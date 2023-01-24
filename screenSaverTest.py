@@ -160,13 +160,13 @@ class Balls:
             self.y_speed = - self.y_speed
 
 
-if '/s' in sys.argv:
+args = [x.lower() for x in sys.argv]
+if '/s' in args:
     Screen()
-elif "/p" in sys.argv:
+elif "/p" in args:
     print('preview')
-elif "/c" in sys.argv:
+elif "/c" in args:
     print("config..")
 else:
-    ctypes.windll.user32.MessageBoxW(0, 'other param not impl:' + " ".join(sys.argv[1:]), 'screensaver', win32con.MB_OK)
-
-
+    ctypes.windll.user32.MessageBoxW(0, 'other param not impl:' + " ".join(args[1:]), 'screensaver', win32con.MB_OK)
+# TODO 一次性读了所有图片 内存占用太多

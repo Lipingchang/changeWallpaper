@@ -5,6 +5,7 @@
 但是用vb调用user32中的 `SystemParametersInfoW` 就能立即生效。 
 
 
+## option1: 使用VB
 从这个回答中抄来的：
 https://stackoverflow.com/questions/56522110/how-to-fix-rundll32-exe-user32-dll-updateperusersystemparameters-1-true-not-upd
 
@@ -19,6 +20,7 @@ https://stackoverflow.com/questions/56522110/how-to-fix-rundll32-exe-user32-dll-
 3. **管理员**运行 ChangeWallpaper.exe 文件
 4. 就会把当前目录下的 桌面.jpg 复制到 c:\windows 目录中，然后修改桌面图片
 
+## option2: 使用 Python
 ### python打包到exe
 `pyinstaller -F -w -i x.ico xxx.py`
 生成spec后
@@ -28,4 +30,22 @@ https://stackoverflow.com/questions/56522110/how-to-fix-rundll32-exe-user32-dll-
 
 加上 --onefile 后 启动速度也没变快。
 
-onefile 和 -F 都会输出一个exe，但启动速度都不快
+onefile 和 -F 都会输出一个exe，但启动速度都不快, 可能是我的磁盘太慢了
+
+### 开发环境
+初始化32位的python虚拟环境: `E:\Python\Python36_32\python.exe -m venv .\venv32`
+
+进入: `.\venv32\Scripts\activate.bat`
+
+安装要用的库: `(venv)  pip install -r requirements.txt`
+
+### 调用关系
+
+changeWallpaper:
+
+1. 把 **桌面-py.jpg** 复制到 c:\windows\showshow 文件夹中，然后设置其为桌面
+
+2. 把 当前文件夹下的 **screensaverTest文件夹** 复制到 C:\windows\showshow 文件夹中，然后设置为屏保
+
+
+

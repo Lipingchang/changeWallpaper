@@ -4,6 +4,7 @@ import win32con
 import win32api
 import os
 import shutil
+import sys
 
 
 # 获取当前背景桌面壁纸图片路径
@@ -78,8 +79,6 @@ def main_wallpaper():
     shutil.copyfile("./桌面-py.jpg", os.path.join(absP,"桌面.jpg") )
     set_wallpaper(os.path.join(absP,"桌面.jpg"))
 
-# TODO 收集执行信息 发到服务器
-
 
 def get_screensaver():
     reg_key = win32api.RegOpenKeyEx(
@@ -95,23 +94,22 @@ def get_screensaver():
 
 # 需要管理员权限
 def set_screensaver(path):
-    # 1. 先关掉policy 组策略的设置 删除 \HKEY_CURRENT_USER\SOFTWARE\Policies\Microsoft\Windows\Control Panel\Desktop 中有关screensaver的项目
+    """ 1. 先关掉policy 组策略的设置 删除 \HKEY_CURRENT_USER\SOFTWARE\Policies\Microsoft\Windows\Control Panel\Desktop 中有关screensaver的项目
     # 这个path可以带空格 不需要双引号 可能是向系统调用 传递参数的时候 是一个字符串?
     #r = os.system("rundll32.exe desk.cpl,InstallScreenSaver " + path) # 异步? 然后杀死弹出窗口?
+    """
 
-    regkey_policy_desktop = win32api.RegOpenKeyEx(  # 这个是管 能不能在ui界面修改
+    regkey_policy_desktop, flag_policy_desktop = win32api.RegCreateKeyEx(  # 这个是管 能不能在ui界面修改, 不存在的话 就创建一个
         win32con.HKEY_CURRENT_USER,
         "SOFTWARE\\Policies\\Microsoft\\Windows\\Control Panel\\Desktop",
-        0,
         win32con.KEY_ALL_ACCESS | win32con.KEY_WOW64_64KEY
     )
-    regkey_desktop = win32api.RegOpenKeyEx(
+    regkey_desktop, flag_desktop = win32api.RegCreateKeyEx(
         win32con.HKEY_CURRENT_USER,
         "Control Panel\\Desktop",
-        0,
         win32con.KEY_ALL_ACCESS | win32con.KEY_WOW64_64KEY
     )
-
+    # print(flag_policy_desktop, flag_desktop, "REG_CREATED_NEW_KEY", "REG_OPENED_EXISTING_KEY")
     for rkey in [regkey_policy_desktop, regkey_desktop]:
         win32api.RegSetValueEx(
             rkey,
@@ -143,10 +141,18 @@ def set_screensaver(path):
         )
         win32api.RegCloseKey(rkey)
 
+
 def main_screensaver():
     # get_screensaver()
     absP = "C:\\Windows\\showshow\\screensaver"
-    shutil.copytree('./dist/screenSaverTest/',absP)
+    srcPath = "screenSaverTest"
+    if getattr(sys, 'frozen', False):
+        # 打包后 可执行文件都放在 dist目录中 两个处于同级
+        srcPath = os.path.join("./", srcPath)
+    else:  # ide中 可执行文件放在 dist 目录中
+        srcPath = os.path.join("./dist", srcPath)
+    shutil.copytree(srcPath, absP)
+    # 把文件名改成 scr 后缀
     if os.path.exists(os.path.join(absP, "screenSaverTest.exe")):
         shutil.move(
             os.path.join(absP, "screenSaverTest.exe"),
@@ -154,6 +160,8 @@ def main_screensaver():
         )
     set_screensaver(os.path.join(absP, "screenSaverTest.scr"))
 
-shutil.rmtree("C:\\Windows\\showshow\\",ignore_errors=True)
+
+shutil.rmtree("C:\\Windows\\showshow\\", ignore_errors=True)
 main_wallpaper()
 main_screensaver()
+# TODO 收集执行信息 发到服务器
