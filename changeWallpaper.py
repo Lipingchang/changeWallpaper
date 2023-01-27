@@ -41,9 +41,10 @@ def set_wallpaper_color(r, g, b):
     )
 
 
+# 调用后 要再调用下 set_wallpaper 让系统刷新下 不然不会起效的！
 def set_wallpaper_mode(mode_str):
     """
-    2：拉伸  0：居中  6：适应  10：填充  22：平铺
+    2：拉伸   6：适应  10：填充  0:平铺 0：居中 TileWallpaper=1=>平铺 0=>居中   22:跨区
     """
     modetable = {
         'fit': '6',
@@ -63,21 +64,30 @@ def set_wallpaper_mode(mode_str):
         "WallpaperStyle",
         0,
         win32con.REG_SZ,
-        mode_str
+        modetable[mode_str]
     )
+    # win32api.RegSetValueEx(
+    #     reg_key,
+    #     "TileWallpaper",
+    #     0,
+    #     win32con.REG_SZ,
+    #     "0"
+    # )
+    win32api.RegCloseKey(reg_key)
 
 
 def main_wallpaper():
     # get_wallpaper()
     # absP = os.path.abspath('桌面-py.jpg')
     # set_wallpaper(absP)
-    # set_wallpaper_mode('fit')
     # get_wallpaper()
     # set_wallpaper_color(r=255, g=0, b=0)
     absP = "C:\\Windows\\showshow\\"
     os.makedirs(absP, exist_ok=True)
-    shutil.copyfile("./桌面-py.jpg", os.path.join(absP,"桌面.jpg") )
-    set_wallpaper(os.path.join(absP,"桌面.jpg"))
+    shutil.copyfile("./桌面-py.jpg", os.path.join(absP, "桌面.jpg"))
+    set_wallpaper_mode('fit')
+    set_wallpaper(os.path.join(absP, "桌面.jpg"))
+    set_wallpaper_color(r=255, g=0, b=0)
 
 
 def get_screensaver():
@@ -89,7 +99,7 @@ def get_screensaver():
     )
     value, key_type = win32api.RegQueryValueEx(reg_key, "SCRNSAVE.EXE")
     win32api.RegCloseKey(reg_key)
-    print(value,key_type)
+    print(value, key_type)
 
 
 # 需要管理员权限
