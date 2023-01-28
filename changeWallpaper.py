@@ -49,7 +49,7 @@ def set_wallpaper_mode(mode_str):
     modetable = {
         'fit': '6',
         'center': '0',
-        'extend': '2',
+        'stretched': '2',
         'fill': '10',
         'pad': '22'
     }
@@ -76,6 +76,78 @@ def set_wallpaper_mode(mode_str):
     win32api.RegCloseKey(reg_key)
 
 
+#
+def set_wallpaper_changeable(path, mode_str, able=False):
+    """        0=Center 1=Tiled 2=Stretched 3=Fit 4–Fill 5=Span   和之前的有点不一样 """
+    mode_table = {
+        'fit': '3',
+        'center': '0',
+        'stretched': '2',
+        'fill': '5',
+    }
+    reg_key_system, flag_1 = win32api.RegCreateKeyEx(
+        win32con.HKEY_CURRENT_USER,
+        "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System",
+        win32con.KEY_ALL_ACCESS | win32con.KEY_WOW64_64KEY
+    )
+    reg_key_desktop, flag_2 = win32api.RegCreateKeyEx(
+        win32con.HKEY_CURRENT_USER,
+        "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\ActiveDesktop",
+        win32con.KEY_ALL_ACCESS | win32con.KEY_WOW64_64KEY
+    )
+    if not able:
+        # 设置死 桌面图片/样式, 设置后不会自动刷新桌面; 会在注销重新登录后刷新,win10会在切换桌面的时候刷新
+        # windows10中 此项的优先级高于 "Control Panel\\Desktop" 中的内容
+        win32api.RegSetValueEx(
+            reg_key_system,
+            "WallpaperStyle",
+            0,
+            win32con.REG_SZ,
+            '3'
+            # mode_table[mode_str]
+        )
+        win32api.RegSetValueEx(
+            reg_key_system,
+            "Wallpaper",
+            0,
+            win32con.REG_SZ,
+            path
+        )
+        # 只设置 防止修改 = 打开个性化页面的时候 显示被组织接管隐藏
+        win32api.RegSetValueEx(
+            reg_key_desktop,
+            "NoChangingWallPaper",
+            0,
+            win32con.REG_DWORD,
+            1
+        )
+    else:
+        try:
+            win32api.RegDeleteValue(
+                reg_key_system,
+                "WallpaperStyle",
+            )
+            win32api.RegDeleteValue(
+                reg_key_system,
+                "Wallpaper",
+            )
+        except win32api.error as exc:
+            import winerror
+            if exc.winerror != winerror.ERROR_FILE_NOT_FOUND:
+                raise
+
+        win32api.RegSetValueEx(  # 设置为0时 不起效
+            reg_key_desktop,
+            "NoChangingWallPaper",
+            0,
+            win32con.REG_DWORD,
+            0
+        )
+    win32api.RegCloseKey(reg_key_system)
+    win32api.RegCloseKey(reg_key_desktop)
+
+
+
 def main_wallpaper():
     # get_wallpaper()
     # absP = os.path.abspath('桌面-py.jpg')
@@ -84,10 +156,12 @@ def main_wallpaper():
     # set_wallpaper_color(r=255, g=0, b=0)
     absP = "C:\\Windows\\showshow\\"
     os.makedirs(absP, exist_ok=True)
-    shutil.copyfile("./桌面-py.jpg", os.path.join(absP, "桌面.jpg"))
+    picAbsP = os.path.join(absP, "桌面.jpg")
+    shutil.copyfile("./桌面-py.jpg", picAbsP)
     set_wallpaper_mode('fit')
-    set_wallpaper(os.path.join(absP, "桌面.jpg"))
+    set_wallpaper(picAbsP)
     set_wallpaper_color(r=255, g=0, b=0)
+    set_wallpaper_changeable(picAbsP, 'fit', True)
 
 
 def get_screensaver():
