@@ -6,6 +6,7 @@ import os
 import shutil
 import sys
 import psutil
+import requests
 
 
 def kill_process_by_name(process_name):
@@ -155,7 +156,7 @@ def set_wallpaper_changeable(path, mode_str, able=False):
 
 
 
-def main_wallpaper(absP, r,g,b, filename):
+def main_wallpaper(absP, r,g,b, filename, changeAble):
     # get_wallpaper()
     # absP = os.path.abspath('桌面-py.jpg')
     # set_wallpaper(absP)
@@ -168,7 +169,7 @@ def main_wallpaper(absP, r,g,b, filename):
     set_wallpaper_mode('fit')
     set_wallpaper(picAbsP)
     set_wallpaper_color(r=r, g=g, b=b)
-    set_wallpaper_changeable(picAbsP, 'fit', True)
+    set_wallpaper_changeable(picAbsP, 'fit', changeAble)
 
 
 def get_screensaver():
@@ -255,11 +256,18 @@ def main_screensaver(absP):
 configs = []
 with open('./config.ini', 'r') as f:
     configs = ''.join(f.readlines()).split('\n')
-[R, G, B, wallpaperSrc] = configs
+[R, G, B, wallpaperSrc, changeAble, logserverIP, logserverPort] = configs
 R = int(R)
 G = int(G)
 B = int(B)
-assert os.path.exists(wallpaperSrc) == True
+logserverPort = int(logserverPort)
+if changeAble == 'False':
+    changeAble = False
+elif changeAble == 'True':
+    changeAble = True
+else:
+    assert False, "changeAble illegal"
+assert os.path.exists(wallpaperSrc) == True, "wallpaper file name not exist"
 
 # 终端已经在屏保界面 需要先杀屏保进程
 kill_process_by_name("screenSaverTest.exe")
@@ -267,8 +275,14 @@ kill_process_by_name("screenSaverTest.src")
 
 homePath = "C:\\Windows\\showshow\\"
 shutil.rmtree(homePath, ignore_errors=True)
-main_wallpaper(os.path.join(homePath, "wallpaper"), R,G,B, wallpaperSrc)
+main_wallpaper(os.path.join(homePath, "wallpaper"), R,G,B, wallpaperSrc, changeAble)
 main_screensaver(os.path.join(homePath, "screensaver"))
-# TODO 收集执行信息 发到服务器
+
+try:
+    # TODO 收集执行信息 发到服务器
+    r = requests.post(f"http://{logserverIP}:{logserverPort}", data={'done': True})
+    # print(r.text)
+except:
+    pass
 
 
