@@ -5,6 +5,13 @@ import win32api
 import os
 import shutil
 import sys
+import psutil
+
+
+def kill_process_by_name(process_name):
+    for process in psutil.process_iter(['name']):
+        if process.info['name'] == process_name:
+            process.kill()
 
 
 # 获取当前背景桌面壁纸图片路径
@@ -148,19 +155,19 @@ def set_wallpaper_changeable(path, mode_str, able=False):
 
 
 
-def main_wallpaper():
+def main_wallpaper(absP, r,g,b, filename):
     # get_wallpaper()
     # absP = os.path.abspath('桌面-py.jpg')
     # set_wallpaper(absP)
     # get_wallpaper()
     # set_wallpaper_color(r=255, g=0, b=0)
-    absP = "C:\\Windows\\showshow\\"
+    # absP = "C:\\Windows\\showshow\\"
     os.makedirs(absP, exist_ok=True)
     picAbsP = os.path.join(absP, "桌面.jpg")
-    shutil.copyfile("./桌面-py.jpg", picAbsP)
+    shutil.copyfile(filename, picAbsP)
     set_wallpaper_mode('fit')
     set_wallpaper(picAbsP)
-    set_wallpaper_color(r=255, g=0, b=0)
+    set_wallpaper_color(r=r, g=g, b=b)
     set_wallpaper_changeable(picAbsP, 'fit', True)
 
 
@@ -226,9 +233,9 @@ def set_screensaver(path):
         win32api.RegCloseKey(rkey)
 
 
-def main_screensaver():
+def main_screensaver(absP):
     # get_screensaver()
-    absP = "C:\\Windows\\showshow\\screensaver"
+    # absP = "C:\\Windows\\showshow\\screensaver"
     srcPath = "screenSaverTest"
     if getattr(sys, 'frozen', False):
         # 打包后 可执行文件都放在 dist目录中 两个处于同级
@@ -245,7 +252,23 @@ def main_screensaver():
     set_screensaver(os.path.join(absP, "screenSaverTest.scr"))
 
 
-shutil.rmtree("C:\\Windows\\showshow\\", ignore_errors=True)
-main_wallpaper()
-main_screensaver()
+configs = []
+with open('./config.ini', 'r') as f:
+    configs = ''.join(f.readlines()).split('\n')
+[R, G, B, wallpaperSrc] = configs
+R = int(R)
+G = int(G)
+B = int(B)
+assert os.path.exists(wallpaperSrc) == True
+
+# 终端已经在屏保界面 需要先杀屏保进程
+kill_process_by_name("screenSaverTest.exe")
+kill_process_by_name("screenSaverTest.src")
+
+homePath = "C:\\Windows\\showshow\\"
+shutil.rmtree(homePath, ignore_errors=True)
+main_wallpaper(os.path.join(homePath, "wallpaper"), R,G,B, wallpaperSrc)
+main_screensaver(os.path.join(homePath, "screensaver"))
 # TODO 收集执行信息 发到服务器
+
+

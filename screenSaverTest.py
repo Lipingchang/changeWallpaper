@@ -12,7 +12,7 @@ class Screen:
     def __init__(self):
         self.root = Tk()
         self.root.attributes("-fullscreen", True)
-        self.root.attributes("-alpha", 0.95)
+        self.root.attributes("-alpha", 1)
         self.root.bind('<Button-1>', self.myquit)
         # self.root.bind('<Motion>', self.myquit)
 
