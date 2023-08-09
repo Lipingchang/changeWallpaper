@@ -252,11 +252,18 @@ def main_screensaver(absP):
         )
     set_screensaver(os.path.join(absP, "screenSaverTest.scr"))
 
+def getBool(changeAble):
+    if str(changeAble) == 'False':
+        return False
+    elif str(changeAble) == 'True':
+        return True
+    else:
+        assert False, "ini input: True/False is illegal"
 
 configs = []
 with open('./config.ini', 'r') as f:
     configs = ''.join(f.readlines()).split('\n')
-[R, G, B, wallpaperSrc, changeAble, logserverIP, logserverPort] = configs
+[R, G, B, wallpaperSrc, changeAble, logserverIP, logserverPort, changeWallpaper, changeSaver] = configs
 R = int(R)
 G = int(G)
 B = int(B)
@@ -267,16 +274,23 @@ elif changeAble == 'True':
     changeAble = True
 else:
     assert False, "changeAble illegal"
+changeAble = getBool(changeAble)
+changeWallpaper = getBool(changeWallpaper)
+changeSaver = getBool(changeSaver)
 assert os.path.exists(wallpaperSrc) == True, "wallpaper file name not exist"
 
 # 终端已经在屏保界面 需要先杀屏保进程
 kill_process_by_name("screenSaverTest.exe")
 kill_process_by_name("screenSaverTest.src")
-
 homePath = "C:\\Windows\\showshow\\"
-shutil.rmtree(homePath, ignore_errors=True)
-main_wallpaper(os.path.join(homePath, "wallpaper"), R,G,B, wallpaperSrc, changeAble)
-main_screensaver(os.path.join(homePath, "screensaver"))
+
+# 是否改桌面
+if changeWallpaper:
+    shutil.rmtree(homePath, ignore_errors=True)
+    main_wallpaper(os.path.join(homePath, "wallpaper"), R,G,B, wallpaperSrc, changeAble)
+# 是否改屏保
+if changeSaver:
+    main_screensaver(os.path.join(homePath, "screensaver"))
 
 try:
     # TODO 收集执行信息 发到服务器
