@@ -286,10 +286,11 @@ homePath = "C:\\Windows\\showshow\\"
 
 # 是否改桌面
 if changeWallpaper:
-    shutil.rmtree(homePath, ignore_errors=True)
+    shutil.rmtree(os.path.join(homePath, "wallpaper"), ignore_errors=True)
     main_wallpaper(os.path.join(homePath, "wallpaper"), R,G,B, wallpaperSrc, changeAble)
 # 是否改屏保
 if changeSaver:
+    shutil.rmtree(os.path.join(homePath, "screensaver"), ignore_errors=True)
     main_screensaver(os.path.join(homePath, "screensaver"))
 
 try:

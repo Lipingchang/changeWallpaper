@@ -32,7 +32,7 @@ https://stackoverflow.com/questions/56522110/how-to-fix-rundll32-exe-user32-dll-
 
 onefile 和 -F 都会输出一个exe，但启动速度都不快, 可能是我的磁盘太慢了
 
-### 开发环境
+### 开发环境: py39打包的exe会缺失库!
 初始化32位的python虚拟环境: `E:\Python\Python36_32\python.exe -m venv .\venv32`
 
 进入: `.\venv32\Scripts\activate.bat`
@@ -49,3 +49,15 @@ changeWallpaper:
 
 
 
+### 配置文件
+```
+78          // RGB
+33
+24
+desktop-py.jpg  // 桌面图片文件
+True            // 用户能不能修改桌面图片
+127.0.0.1       // 日志上报地址 和 端口
+8810           
+True            // 本次运行 只修改桌面
+True            // 本次运行 只修改屏保
+```
